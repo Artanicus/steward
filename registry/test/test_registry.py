@@ -66,6 +66,8 @@ def test_CreateUpdateDeleteUser(grpc_stub):
     assert updated_user.name == 'KillMe'
     updated_user = grpc_stub.GetUser(GetUserRequest(_id=inserted_id))
     print(updated_user)
+    assert updated_user.name == 'KillMe'
+
     # Delete
     request = DeleteUserRequest(_id=inserted_id)
     del_response = grpc_stub.DeleteUser(request)
