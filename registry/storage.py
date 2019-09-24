@@ -11,14 +11,19 @@ FLAGS=flags.FLAGS
 
 flags.DEFINE_enum('env', 'dev', ['dev', 'testing', 'prod'], 'Environment to use.')
 flags.DEFINE_string('db', 'mongodb://steward.lxc:27017', 'MongoDB connection string.')
+flags.DEFINE_integer('db_timeout', 3000, 'MongoDB connection timeout in milliseconds.')
 
 class StorageManager():
     def __init__(self):
-        self.mongo_client = pymongo.MongoClient(FLAGS.db)
         collection = 'steward-' + FLAGS.env
-        self.db = self.mongo_client[collection]
-        self.users = self.db.user
-        logging.info('StorageManager using {}/{}'.format(FLAGS.db, collection))
+        logging.info('StorageManager connecting to {}/{}'.format(FLAGS.db, collection))
+        try:
+            self.mongo_client = pymongo.MongoClient(FLAGS.db, serverSelectionTimeoutMS=FLAGS.db_timeout)
+            self.db = self.mongo_client[collection]
+            self.users = self.db.user
+            logging.info(self.mongo_client.server_info())
+        except pymongo.errors.ServerSelectionTimeoutError as err:
+            print(err)
 
     def encode(self, proto):
         logging.info('Proto->Dict before encode: {}'.format(proto))
